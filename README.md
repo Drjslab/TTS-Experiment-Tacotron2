@@ -11,3 +11,7 @@ Create DAtaset load
 
 # Citations 
 [1] https://www.kaggle.com/datasets/mathurinache/the-lj-speech-dataset?resource=download
+
+
+15 Aug 
+Size mis match not working...
