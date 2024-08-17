@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # Initialize dataset and model
     data_path = "datasets"
     dataset = LJSpeechDataset(data_path)
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
     
     model = Tacotron2()
     criterion = nn.MSELoss()
