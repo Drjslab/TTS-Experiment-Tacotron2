@@ -20,10 +20,9 @@ Size mis match not working...
 
 17 Aug 
 -> Fixed padding issue at 
-''' # Pad output to match target length
-        if output.size(1) < mel.size(1):
-            output = nn.functional.pad(output, (0, 0, 0, mel.size(1) - output.size(1)))
-
+''' 
+if output.size(1) < mel.size(1):
+    output = nn.functional.pad(output, (0, 0, 0, mel.size(1) - output.size(1)))
 '''
 Added following methods
 
@@ -47,6 +46,7 @@ Suggested solutions ->
 
 -> Disabled globaly CUDA
 or single Network only 
+
 '''
 self.encoder = nn.LSTM(n_hidden, n_hidden, n_layers, batch_first=True, bidirectional=True, use_cudnn=False)
 '''
