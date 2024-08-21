@@ -49,12 +49,12 @@ class LJSpeechDataset(Dataset):
         # Convert text to a list of character indices
         text_indices = torch.tensor([ord(char) for char in text], dtype=torch.long)
 
-        return mel, text_indices
+        return mel, text_indices,  self.metadata[idx][0]
 
     @staticmethod
     def collate_fn(batch):
         # Separate the batch into mel spectrograms and texts
-        mels, texts = zip(*batch)
+        mels, texts, name = zip(*batch)
         
         # Pad mel spectrograms to the length of the longest one in the batch
         mel_padded = pad_sequence(mels, batch_first=True, padding_value=0.0)
@@ -62,7 +62,7 @@ class LJSpeechDataset(Dataset):
         # Pad text sequences to the length of the longest one in the batch
         text_padded = pad_sequence(texts, batch_first=True, padding_value=0)
         
-        return mel_padded, text_padded
+        return mel_padded, text_padded, name
 
 if __name__ == "__main__":
     data_path = "datasets"
