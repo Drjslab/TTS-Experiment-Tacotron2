@@ -4,6 +4,7 @@ import torch
 import torchaudio.transforms as transforms
 from torch.utils.data import Dataset, DataLoader
 from torch.nn.utils.rnn import pad_sequence
+import matplotlib.pyplot as plt
 
 class LJSpeechDataset(Dataset):
     def __init__(self, data_path, sample_rate=22050):
@@ -41,10 +42,14 @@ class LJSpeechDataset(Dataset):
         mel = mel_spectrogram(waveform).squeeze(0)
 
         # Normalize the mel spectrogram
-        mel = (mel - mel.min()) / (mel.max() - mel.min())
+        # mel = (mel - mel.min()) / (mel.max() - mel.min())
+
+        # Convert to numpy for plotting
+       
 
         # Transpose mel to match the shape [time, n_mels]
         mel = mel.transpose(0, 1)
+
 
         # Convert text to a list of character indices
         text_indices = torch.tensor([ord(char) for char in text], dtype=torch.long)
@@ -64,11 +69,47 @@ class LJSpeechDataset(Dataset):
         
         return mel_padded, text_padded, name
 
+
+def mel_to_waveform(mel_spectrogram, sample_rate=22050):
+    # Create an inverse Mel filter bank
+    n_fft = 1024
+    mel_to_stft = transforms.InverseMelScale(
+        n_stft=n_fft // 2 + 1, 
+        n_mels=490,  # Same as your mel-spectrogram
+        sample_rate=sample_rate
+    )
+    
+    # Project the mel-spectrogram back to STFT
+    stft = mel_to_stft(mel_spectrogram)
+    
+    # Apply the Griffin-Lim algorithm
+    griffin_lim = transforms.GriffinLim(n_fft=n_fft, hop_length=256, win_length=1024)
+    waveform = griffin_lim(stft)
+    
+    return waveform
+
+
 if __name__ == "__main__":
     data_path = "datasets"
     dataset = LJSpeechDataset(data_path)
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
+    # dataloader = DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
+    # print(type(dataloader))
 
-    for mel, text in dataloader:
-        print(mel.shape)  # [batch_size, max_time, n_mels]
-        print(text.shape)  # [batch_size, max_text_length]
+    mel, text, name = dataset[5]
+            # Plot the MelSpectrogram
+    print(name)
+    mel_np = mel.squeeze().detach().numpy()
+    plt.figure(figsize=(10, 4))
+    plt.imshow(mel_np, aspect='auto', origin='lower')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Mel Spectrogram')
+    plt.xlabel('Time')
+    plt.ylabel('Mel Frequency')
+    plt.show()
+
+    x = mel_to_waveform(mel,sample_rate=22050)
+        # Save the waveform as a .wav file
+    output_path = "output_testt.wav"
+    torchaudio.save(output_path, x.unsqueeze(0), 22050)
+
+

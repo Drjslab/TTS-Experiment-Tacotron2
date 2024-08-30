@@ -31,16 +31,6 @@ def mel_to_waveform(mel_spectrogram, sample_rate=22050):
     
     return waveform
 
-
-# # Function to convert mel-spectrogram to waveform
-# def mel_to_waveform(mel_spectrogram, sample_rate=22050):
-#     # You can use the Griffin-Lim algorithm for waveform reconstruction
-    
-
-#     griffin_lim = transforms.GriffinLim(n_fft=1024, hop_length=256, win_length=1024)
-#     waveform = griffin_lim(mel_spectrogram)
-#     return waveform
-
 # Load the trained Tacotron model
 model = Tacotron2()
 final_model_path = f"{save_path}/jp_tacotron.pt"
@@ -56,10 +46,13 @@ with torch.no_grad():
     mel_input= ""
     mel_spectrogram = model(text_sequence, mel_input)  # Replace this with your model's inference method
 
-    print("mel_spectrogram", mel_spectrogram)
+    print("mel_spectrogram", mel_spectrogram.size())
 
     # Convert the mel-spectrogram to waveform
-    waveform = mel_to_waveform(mel_spectrogram.squeeze(0))
+
+    mel_spectrogram = mel_spectrogram.squeeze(0)
+
+    waveform = mel_to_waveform(mel_spectrogram)
 
 # Save the waveform as a .wav file
 output_path = "output.wav"
