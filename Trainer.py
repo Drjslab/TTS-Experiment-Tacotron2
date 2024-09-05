@@ -79,6 +79,8 @@ def train(model, dataloader, optimizer, criterion, epochs=50, save_path="output"
         epoch_info = f"Epoch [{epoch + 1}/{epochs}], Avg Loss: {avg_epoch_loss:.4f}, Avg MAE: {avg_epoch_accuracy:.4f}"
         logging.info(epoch_info)
         print(epoch_info)
+        final_model_path = f"{save_path}/tacotron_{epoch + 1}.pt"
+        torch.save(model.state_dict(), final_model_path)
 
     print("Training Complete.")
     final_model_path = f"{save_path}/jp_tacotron.pt"
