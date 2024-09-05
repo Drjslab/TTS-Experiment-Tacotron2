@@ -36,9 +36,6 @@ class LJSpeechDataset(Dataset):
             waveform = resample(waveform)
 
         # Convert waveform to mel spectrogram
-        
-
-        print("Waveform in shape", waveform.shape)
 
         spectrogram = transforms.Spectrogram(
             n_fft=1024,
@@ -120,6 +117,5 @@ if __name__ == "__main__":
     dataset = LJSpeechDataset(data_path)
 
     mel, text, name = dataset[5]
-    print(mel.shape, text.shape, name)
 
 
