@@ -51,6 +51,7 @@ with torch.no_grad():
     # Convert the mel-spectrogram to waveform
 
     mel_spectrogram = mel_spectrogram.squeeze(0)
+    mel_spectrogram.transpose(1,0)
 
     waveform = mel_to_waveform(mel_spectrogram)
 

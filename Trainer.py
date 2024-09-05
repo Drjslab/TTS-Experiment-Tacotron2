@@ -11,13 +11,13 @@ import logging
 # Configure logging
 logging.basicConfig(
     filename='app.log',           # Log file name
-    filemode='a',                 # Append mode (use 'w' for overwrite mode)
+    filemode='w',                 # Append mode (use 'w' for overwrite mode)
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     level=logging.INFO            # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 )
 
-def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"):
+def train(model, dataloader, optimizer, criterion, epochs=50, save_path="output"):
     model.train()
     # Create a directory for saving checkpoints
     if not os.path.exists(save_path):
@@ -29,13 +29,20 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
         epoch_accuracy = 0.0
         for mel, text, name in dataloader:
             try:
+
+                print("AT Trainging ", mel.shape, text.shape)
                 # Move data to device (if using GPU)
-                mel, text = mel.to("cpu"), text.to("cpu")
-                model.to("cpu")
+                # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                device ="cpu"
+                print(f"Using {device}")
+                mel, text = mel.to(device), text.to(device)
+                model.to(device)
 
                 # Forward pass
                 optimizer.zero_grad()
                 output = model(text, mel)
+
+                print("output", output.shape)
 
                 # Pad output to match target length
                 if output.size(1) < mel.size(1):
@@ -50,12 +57,14 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
                 mae = torch.mean(torch.abs(output - mel)).item()
                 epoch_accuracy += mae
 
-                # Update epoch loss
+                # Update epoch lossD
                 epoch_loss += loss.item()
 
                 infoTxt = f"Epoch [{epoch + 1}], Loss: {loss.item()}, MAE: {mae} for {name}"
                 logging.info(infoTxt)
                 print(infoTxt)
+
+                # input("Press enter to continue.")
 
             except Exception as e:
                 errorTxt = f"Error: {e} for {name}"
@@ -79,10 +88,10 @@ if __name__ == "__main__":
     # Initialize dataset and model
     data_path = "datasets"
     dataset = LJSpeechDataset(data_path)
-    dataloader = DataLoader(dataset, batch_size=10, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
+    dataloader = DataLoader(dataset, batch_size=5, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
     
     model = Tacotron2()
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    train(model, dataloader, optimizer, criterion, epochs=10, save_path="output")
+    train(model, dataloader, optimizer, criterion, epochs=150, save_path="output")
