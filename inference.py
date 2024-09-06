@@ -60,3 +60,6 @@ output_path = "output.wav"
 torchaudio.save(output_path, waveform.unsqueeze(0), 22050)
 
 print(f"Audio saved at {output_path}")
+print("Plaing sound")
+os.system(f"aplay {output_path}")
+print("Done.")
