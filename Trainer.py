@@ -29,20 +29,15 @@ def train(model, dataloader, optimizer, criterion, epochs=50, save_path="output"
         epoch_accuracy = 0.0
         for mel, text, name in dataloader:
             try:
-
-                print("AT Trainging ", mel.shape, text.shape)
                 # Move data to device (if using GPU)
                 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                 device ="cpu"
-                print(f"Using {device}")
                 mel, text = mel.to(device), text.to(device)
                 model.to(device)
 
                 # Forward pass
                 optimizer.zero_grad()
                 output = model(text, mel)
-
-                print("output", output.shape)
 
                 # Pad output to match target length
                 if output.size(1) < mel.size(1):
