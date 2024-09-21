@@ -51,6 +51,7 @@ with torch.no_grad():
     # Convert the mel-spectrogram to waveform
 
     mel_spectrogram = mel_spectrogram.squeeze(0)
+    mel_spectrogram.transpose(1,0)
 
     waveform = mel_to_waveform(mel_spectrogram)
 
@@ -59,3 +60,6 @@ output_path = "output.wav"
 torchaudio.save(output_path, waveform.unsqueeze(0), 22050)
 
 print(f"Audio saved at {output_path}")
+print("Plaing sound")
+os.system(f"aplay {output_path}")
+print("Done.")
