@@ -12,15 +12,14 @@ from torch.utils.tensorboard import SummaryWriter
 # Configure logging
 logging.basicConfig(
     filename='app.log',           # Log file name
-    filemode='a',                 # Append mode (use 'w' for overwrite mode)
+    filemode='w',                 # Append mode (use 'w' for overwrite mode)
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     level=logging.INFO            # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 )
 
 writer  = SummaryWriter()
-
-def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"):
+def train(model, dataloader, optimizer, criterion, epochs=50, save_path="output"):
     model.train()
     # Create a directory for saving checkpoints
     if not os.path.exists(save_path):
@@ -33,8 +32,10 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
         for mel, text, name in dataloader:
             try:
                 # Move data to device (if using GPU)
-                mel, text = mel.to("cpu"), text.to("cpu")
-                model.to("cpu")
+                # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                device ="cpu"
+                mel, text = mel.to(device), text.to(device)
+                model.to(device)
 
                 # Forward pass
                 optimizer.zero_grad()
@@ -53,7 +54,7 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
                 mae = torch.mean(torch.abs(output - mel)).item()
                 epoch_accuracy += mae
 
-                # Update epoch loss
+                # Update epoch lossD
                 epoch_loss += loss.item()
 
                 
@@ -63,6 +64,8 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
                 writer.add_scalar("Loss/train", epoch_loss, epoch+1)
                 logging.info(infoTxt)
                 print(infoTxt)
+
+                # input("Press enter to continue.")
 
             except Exception as e:
                 errorTxt = f"Error: {e} for {name}"
@@ -78,6 +81,8 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
         writer.add_scalar("OneTap", avg_epoch_loss, epoch+1)
         logging.info(epoch_info)
         print(epoch_info)
+        final_model_path = f"{save_path}/tacotron_{epoch + 1}.pt"
+        torch.save(model.state_dict(), final_model_path)
 
     print("Training Complete.")
     final_model_path = f"{save_path}/jp_tacotron.pt"
@@ -89,10 +94,10 @@ if __name__ == "__main__":
     # Initialize dataset and model
     data_path = "datasets"
     dataset = LJSpeechDataset(data_path)
-    dataloader = DataLoader(dataset, batch_size=10, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
+    dataloader = DataLoader(dataset, batch_size=5, shuffle=True, collate_fn=LJSpeechDataset.collate_fn)
     
     model = Tacotron2()
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    train(model, dataloader, optimizer, criterion, epochs=10, save_path="output")
+    train(model, dataloader, optimizer, criterion, epochs=150, save_path="output")

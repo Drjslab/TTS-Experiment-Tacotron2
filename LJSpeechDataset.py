@@ -26,9 +26,9 @@ class LJSpeechDataset(Dataset):
         text = self.metadata[idx][2]
 
         # Load waveform
-        waveform, sample_rate = torchaudio.load(wave_path)
 
-        print(waveform.shape ,sample_rate)
+        # wave_path = "https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Samples/AFsp/M1F1-Alaw-AFsp.wav"
+        waveform, sample_rate = torchaudio.load(wave_path)
 
         if sample_rate != self.sample_rate:
             resample = transforms.Resample(sample_rate, self.sample_rate)
@@ -36,6 +36,14 @@ class LJSpeechDataset(Dataset):
         
 
         # Convert waveform to mel spectrogram
+
+        spectrogram = transforms.Spectrogram(
+            n_fft=1024,
+            win_length=1024,
+            hop_length=256,
+
+        )
+        
         mel_spectrogram = transforms.MelSpectrogram(
             sample_rate=self.sample_rate,
             n_fft=1024,
@@ -45,11 +53,27 @@ class LJSpeechDataset(Dataset):
         )
 
         mel = mel_spectrogram(waveform)
-        mel = mel.squeeze(0)
+        specto = spectrogram(waveform)
 
+        mel = mel.squeeze(0)
+        specto = specto.squeeze(0)
+
+
+        '''
+        fig,(ax1,ax2,ax3) = plt.subplots(3,1,figsize=(10,4))
+        log_mel_Mel_spec = torch.log(mel + 1e-9)
+        log_mel_spec = torch.log(specto + 1e-9)
+        ax1.imshow(log_mel_Mel_spec)
+        ax1.set_title('Mel Specto')
+        ax2.imshow(log_mel_spec)
+        ax2.set_title('Spectogram 2')
+        ax3.plot(waveform.t().numpy())
+        plt.tight_layout()
+        plt.show()
+        '''
+        
         # Transpose mel to match the shape [time, n_mels]
         mel = mel.transpose(0, 1)
-
         # Convert text to a list of character indices
         text_indices = torch.tensor([ord(char) for char in text], dtype=torch.long)
 
@@ -90,18 +114,6 @@ def mel_to_waveform(mel_spectrogram, sample_rate=22050):
 if __name__ == "__main__":
     data_path = "datasets"
     dataset = LJSpeechDataset(data_path)
-    mel, text, name = dataset[150]    
-    # Plot the MelSpectrogram
-    print("Ready to print.")
-    mel = mel.transpose(1,0)
-    print(mel.shape)
-
-
-
-    x = mel_to_waveform(mel,sample_rate=22050)
-    print("Size of X", x.shape)
-    # Save the waveform as a .wav file
-    output_path = "output_testt.wav"
-    torchaudio.save(output_path, x.unsqueeze(0), 22050)
+    mel, text, name = dataset[5]
 
 
