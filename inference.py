@@ -26,7 +26,7 @@ def mel_to_waveform(mel_spectrogram, sample_rate=22050):
     stft = mel_to_stft(mel_spectrogram)
     
     # Apply the Griffin-Lim algorithm
-    griffin_lim = transforms.GriffinLim(n_fft=n_fft, hop_length=256, win_length=1024)
+    griffin_lim = transforms.GriffinLim(n_fft=n_fft, hop_length=512, win_length=1024)
     waveform = griffin_lim(stft)
     
     return waveform
@@ -44,15 +44,15 @@ text_sequence = text_to_sequence(text)
 with torch.no_grad():
     # Pass the text sequence to the model to get the mel-spectrogram
     mel_input= ""
-    mel_spectrogram = model(text_sequence, mel_input)  # Replace this with your model's inference method
-
-    print("mel_spectrogram", mel_spectrogram.size())
+    output = model(text_sequence, mel_input)  # Replace this with your model's inference method
 
     # Convert the mel-spectrogram to waveform
 
-    mel_spectrogram = mel_spectrogram.squeeze(0)
+    output = output.squeeze(0)
+    output = output.transpose(1,0)
 
-    waveform = mel_to_waveform(mel_spectrogram)
+    waveform = mel_to_waveform(output)
+    print("p", waveform.unsqueeze(0).shape)
 
 # Save the waveform as a .wav file
 output_path = "output.wav"

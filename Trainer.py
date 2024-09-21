@@ -7,6 +7,7 @@ import torch.optim as optim
 import os
 import torch
 import logging
+from torch.utils.tensorboard import SummaryWriter
 
 # Configure logging
 logging.basicConfig(
@@ -16,6 +17,8 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     level=logging.INFO            # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 )
+
+writer  = SummaryWriter()
 
 def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"):
     model.train()
@@ -53,7 +56,11 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
                 # Update epoch loss
                 epoch_loss += loss.item()
 
+                
+
                 infoTxt = f"Epoch [{epoch + 1}], Loss: {loss.item()}, MAE: {mae} for {name}"
+
+                writer.add_scalar("Loss/train", epoch_loss, epoch+1)
                 logging.info(infoTxt)
                 print(infoTxt)
 
@@ -68,12 +75,15 @@ def train(model, dataloader, optimizer, criterion, epochs=10, save_path="output"
 
         # Log and print epoch statistics
         epoch_info = f"Epoch [{epoch + 1}/{epochs}], Avg Loss: {avg_epoch_loss:.4f}, Avg MAE: {avg_epoch_accuracy:.4f}"
+        writer.add_scalar("OneTap", avg_epoch_loss, epoch+1)
         logging.info(epoch_info)
         print(epoch_info)
 
     print("Training Complete.")
     final_model_path = f"{save_path}/jp_tacotron.pt"
     torch.save(model.state_dict(), final_model_path)
+
+writer.close()
 
 if __name__ == "__main__":
     # Initialize dataset and model
