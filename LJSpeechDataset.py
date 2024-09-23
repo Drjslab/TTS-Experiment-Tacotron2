@@ -25,10 +25,9 @@ class LJSpeechDataset(Dataset):
         wave_path = os.path.join(self.data_path, "wavs", self.metadata[idx][0] + ".wav")
         text = self.metadata[idx][2]
 
-        # Load waveform
-
-        # wave_path = "https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Samples/AFsp/M1F1-Alaw-AFsp.wav"
         waveform, sample_rate = torchaudio.load(wave_path)
+
+        print("\n") 
 
         if sample_rate != self.sample_rate:
             resample = transforms.Resample(sample_rate, self.sample_rate)
@@ -40,7 +39,7 @@ class LJSpeechDataset(Dataset):
         spectrogram = transforms.Spectrogram(
             n_fft=1024,
             win_length=1024,
-            hop_length=256,
+            hop_length=512,
 
         )
         
@@ -53,9 +52,9 @@ class LJSpeechDataset(Dataset):
         )
 
         mel = mel_spectrogram(waveform)
-        specto = spectrogram(waveform)
-
         mel = mel.squeeze(0)
+
+        specto = spectrogram(waveform)
         specto = specto.squeeze(0)
 
 
@@ -73,19 +72,37 @@ class LJSpeechDataset(Dataset):
         '''
         
         # Transpose mel to match the shape [time, n_mels]
-        mel = mel.transpose(0, 1)
+        tensor = mel.transpose(0, 1)
+
+        # Define the target size
+        target_size = 512
+
+        # Padding
+        if tensor.size(0) < target_size:
+            pad_size = target_size - tensor.size(0)
+            padded_tensor = torch.nn.functional.pad(tensor, (0, 0, 0, pad_size), mode='constant', value=0.0)
+        else:
+            # Truncating
+            padded_tensor = tensor[:target_size, :]
+
+
         # Convert text to a list of character indices
         text_indices = torch.tensor([ord(char) for char in text], dtype=torch.long)
-
-        return mel, text_indices,  self.metadata[idx][0]
-
+        print(padded_tensor.shape)
+        return padded_tensor, text_indices,  self.metadata[idx][0]
+    
     @staticmethod
     def collate_fn(batch):
         # Separate the batch into mel spectrograms and texts
+        max_length = 512
         mels, texts, name = zip(*batch)
-        
+        # mymels = torch.
+
         # Pad mel spectrograms to the length of the longest one in the batch
         mel_padded = pad_sequence(mels, batch_first=True, padding_value=0.0)
+        # mel_padded = [pad_or_truncate(mel, max_length) for mel in mels]
+
+        print(mel_padded)
         
         # Pad text sequences to the length of the longest one in the batch
         text_padded = pad_sequence(texts, batch_first=True, padding_value=0)        
@@ -114,6 +131,6 @@ def mel_to_waveform(mel_spectrogram, sample_rate=22050):
 if __name__ == "__main__":
     data_path = "datasets"
     dataset = LJSpeechDataset(data_path)
-    mel, text, name = dataset[5]
-
-
+    mel, text, name = dataset[1]
+    print("Final")
+    print(mel.shape)

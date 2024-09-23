@@ -41,22 +41,21 @@ model.eval()
 text = "Hello World, this world is so big, What is my name. I love India and continetal."
 text_sequence = text_to_sequence(text)
 
+print("text_sequence", text_sequence.shape)
+
 with torch.no_grad():
     # Pass the text sequence to the model to get the mel-spectrogram
     mel_input= ""
     output = model(text_sequence, mel_input)  # Replace this with your model's inference method
 
-    # Convert the mel-spectrogram to waveform
-
-    mel_spectrogram = mel_spectrogram.squeeze(0)
-    mel_spectrogram.transpose(1,0)
+    print("output",output)
 
     waveform = mel_to_waveform(output)
-    print("p", waveform.unsqueeze(0).shape)
+    print("p", waveform.shape)
 
 # Save the waveform as a .wav file
 output_path = "output.wav"
-torchaudio.save(output_path, waveform.unsqueeze(0), 22050)
+torchaudio.save(output_path, waveform, 22050)
 
 print(f"Audio saved at {output_path}")
 print("Plaing sound")
